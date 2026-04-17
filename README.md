@@ -23,7 +23,10 @@ npm install
 
 ```bash
 npx wrangler r2 bucket create docs-agent-cf-repo-files
+npx wrangler d1 create docs-agent-cf-repo-db
 ```
+
+Then copy the returned D1 `database_id` into [wrangler.jsonc](/Users/macbookpro/Documents/projects/docs-agent-cf/wrangler.jsonc:1).
 
 3. Set your repo in `.dev.vars` for local dev, or as Worker vars for deploy:
 

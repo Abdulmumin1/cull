@@ -25,6 +25,13 @@
       "bucket_name": "docs-agent-cf-repo-files",
     },
   ],
+  "d1_databases": [
+    {
+      "binding": "REPO_DB",
+      "database_name": "docs-agent-cf-repo-db",
+      "database_id": "docs-agent-cf-repo-db",
+    },
+  ],
   "worker_loaders": [
     {
       "binding": "LOADER",
@@ -33,8 +40,12 @@
   "durable_objects": {
     "bindings": [
       {
-        "class_name": "RepoAgent",
-        "name": "REPO_AGENT",
+        "class_name": "RepoSyncAgent",
+        "name": "REPO_SYNC_AGENT",
+      },
+      {
+        "class_name": "RepoQueryAgent",
+        "name": "REPO_QUERY_AGENT",
       },
     ],
   },
@@ -42,6 +53,10 @@
     {
       "tag": "v1",
       "new_sqlite_classes": ["RepoAgent"],
+    },
+    {
+      "tag": "v2",
+      "new_sqlite_classes": ["RepoSyncAgent", "RepoQueryAgent"],
     },
   ],
 }
