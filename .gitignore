@@ -7,6 +7,7 @@ ui/dist/
 .env
 .dev.vars
 ui/.env.local
+project-think-self-hosted-repo-agent-research.md
 
 *.tsbuildinfo
 
