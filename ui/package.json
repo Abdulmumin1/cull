@@ -1,0 +1,25 @@
+{
+  "name": "docs-agent-cf-ui",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vinext dev",
+    "build": "vinext build",
+    "deploy": "vinext deploy",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@cloudflare/kumo": "^1.18.0",
+    "@phosphor-icons/react": "^2.1.10",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "vinext": "^0.0.41"
+  },
+  "devDependencies": {
+    "@types/node": "^24.7.2",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "typescript": "^5.9.3"
+  }
+}
