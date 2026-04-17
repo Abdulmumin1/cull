@@ -1,6 +1,6 @@
 # cull
 
-`cull` is a Cloudflare Worker that turns a GitHub repo into a docs/code Q&A endpoint.
+`cull` uses [Project Think](https://blog.cloudflare.com/project-think/) and virtual file ssytem to triage your docs/codebase and answer questions.
 
 You point it at one repo with env vars, deploy it, and call:
 
