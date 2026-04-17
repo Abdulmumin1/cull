@@ -1,0 +1,47 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "docs-agent-cf",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-04-15",
+  "compatibility_flags": ["nodejs_compat", "experimental"],
+  "vars": {
+    "REPO_BRANCH": "main",
+    "REPO_SYNC_INTERVAL_SECONDS": "300",
+    "REPO_SYNC_MAX_AGE_SECONDS": "3600",
+    "QUERY_TIMEOUT_MS": "120000",
+    "MODEL_ID": "@cf/zai-org/glm-4.7-flash",
+    "ALLOWED_ORIGIN": "*",
+  },
+  "triggers": {
+    "crons": ["* * * * *"],
+  },
+  "ai": {
+    "binding": "AI",
+    "remote": true,
+  },
+  "r2_buckets": [
+    {
+      "binding": "REPO_FILES",
+      "bucket_name": "docs-agent-cf-repo-files",
+    },
+  ],
+  "worker_loaders": [
+    {
+      "binding": "LOADER",
+    },
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "class_name": "RepoAgent",
+        "name": "REPO_AGENT",
+      },
+    ],
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["RepoAgent"],
+    },
+  ],
+}

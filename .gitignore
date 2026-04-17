@@ -1,0 +1,13 @@
+node_modules/
+ui/node_modules/
+
+.wrangler/
+ui/dist/
+
+.env
+.dev.vars
+ui/.env.local
+
+*.tsbuildinfo
+
+.DS_Store
