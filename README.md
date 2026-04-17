@@ -1,6 +1,6 @@
 # cull
 
-`cull` uses [Project Think](https://blog.cloudflare.com/project-think/) and virtual file ssytem to triage your docs/codebase and answer questions.
+`cull` uses [Project Think](https://blog.cloudflare.com/project-think/) and virtual file system [cloudflare/shell](https://github.com/cloudflare/agents/tree/main/packages/shell) to triage your docs/codebase and answer questions... you know RAG IS DEAD (they said.)
 
 You point it at one repo with env vars, deploy it, and call:
 
@@ -28,13 +28,14 @@ npx wrangler d1 create docs-agent-cf-repo-db
 
 Then copy the returned D1 `database_id` into [wrangler.jsonc](/Users/macbookpro/Documents/projects/docs-agent-cf/wrangler.jsonc:1).
 
-3. Set your repo in `.dev.vars` for local dev, or as Worker vars for deploy:
+3. Set your repo in `.env` for local dev, or as Worker vars for deploy:
 
 ```text
 REPO_URL=https://github.com/your-org/your-repo
 REPO_BRANCH=main
 QUERY_TIMEOUT_MS=120000
 MODEL_ID=@cf/moonshotai/kimi-k2.5
+REPO_SYNC_INTERVAL_SECONDS=3600
 ```
 
 4. If the repo is private, add a token:
