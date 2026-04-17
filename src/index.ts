@@ -1,12 +1,15 @@
 import { getAgentByName, routeAgentRequest } from "agents";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import type { AskInput, Env } from "./contracts";
+import { errorStatus, formatError, readJson } from "./repo-common";
 import { RepoAgent } from "./repo-agent";
-import type { Env } from "./contracts";
+import { RepoQueryAgent } from "./repo-query-agent";
+import { RepoSyncAgent } from "./repo-sync-agent";
 
-export { RepoAgent };
+export { RepoAgent, RepoSyncAgent, RepoQueryAgent };
 
-const DEFAULT_REPO_AGENT_NAME = "default";
+const DEFAULT_SYNC_AGENT_NAME = "default";
 
 const app = new Hono<{ Bindings: Env }>();
 const apiCors = cors({
@@ -18,9 +21,9 @@ const apiCors = cors({
 app.onError((error, c) => {
   return c.json(
     {
-      error: error instanceof Error ? error.message : String(error),
+      error: formatError(error),
     },
-    400,
+    { status: errorStatus(error) as 400 | 409 | 500 | 503 | 504 },
   );
 });
 
@@ -42,19 +45,21 @@ app.use("/agents/*", async (c, next) => {
 app.get("/health", (c) => c.json({ ok: true }));
 
 app.get("/status", async (c) => {
-  return proxyToDefaultAgent(c.env, c.req.raw, "/status");
+  return proxyToSyncAgent(c.env, c.req.raw, "/status");
 });
 
 app.post("/sync", async (c) => {
-  return proxyToDefaultAgent(c.env, c.req.raw, "/sync");
+  return proxyToSyncAgent(c.env, c.req.raw, "/sync");
 });
 
 app.post("/query", async (c) => {
-  return proxyToDefaultAgent(c.env, c.req.raw, "/query");
+  const body = await readJson<AskInput>(c.req.raw);
+  return proxyToQueryAgent(c.env, c.req.raw, "/query", body);
 });
 
 app.post("/query/stream", async (c) => {
-  return proxyToDefaultAgent(c.env, c.req.raw, "/query/stream");
+  const body = await readJson<AskInput>(c.req.raw);
+  return proxyToQueryAgent(c.env, c.req.raw, "/query/stream", body);
 });
 
 app.all("/repos/*", (c) => {
@@ -70,41 +75,51 @@ app.all("/repos/*", (c) => {
 export default {
   fetch: app.fetch,
   scheduled(_controller: ScheduledController, env: Env, ctx: ExecutionContext) {
-    ctx.waitUntil(warmDefaultAgent(env));
+    ctx.waitUntil(warmSyncAgent(env));
   },
 };
 
-async function getRepoAgent(env: Env, repoId: string) {
-  return getAgentByName(env.REPO_AGENT, decodeURIComponent(repoId));
-}
-
-async function proxyToDefaultAgent(
+async function proxyToSyncAgent(
   env: Env,
   request: Request,
   pathname: string,
 ): Promise<Response> {
-  return proxyToRepoAgent(env, DEFAULT_REPO_AGENT_NAME, request, pathname);
-}
-
-async function proxyToRepoAgent(
-  env: Env,
-  repoId: string,
-  request: Request,
-  pathname: string,
-): Promise<Response> {
-  const agent = await getRepoAgent(env, repoId);
+  const agent = await getAgentByName(env.REPO_SYNC_AGENT, DEFAULT_SYNC_AGENT_NAME);
   const url = new URL(request.url);
   url.pathname = pathname;
 
   return agent.fetch(new Request(url.toString(), request));
 }
 
-async function warmDefaultAgent(env: Env): Promise<void> {
+async function proxyToQueryAgent(
+  env: Env,
+  request: Request,
+  pathname: string,
+  body: AskInput,
+): Promise<Response> {
+  const repoId = `query-${crypto.randomUUID()}`;
+  const agent = await getAgentByName(env.REPO_QUERY_AGENT, repoId);
+  const url = new URL(request.url);
+  url.pathname = pathname;
+
+  return agent.fetch(
+    new Request(url.toString(), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+      signal: request.signal,
+    }),
+  );
+}
+
+async function warmSyncAgent(env: Env): Promise<void> {
   if (!env.REPO_URL?.trim()) {
     return;
   }
 
-  const response = await proxyToDefaultAgent(
+  const response = await proxyToSyncAgent(
     env,
     new Request("https://repo-agent.internal/status"),
     "/status",

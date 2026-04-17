@@ -21,6 +21,7 @@ export type RepoStatus = {
   ready: boolean;
   syncState: RepoSyncState;
   lastSyncReason: RepoSyncReason | null;
+  activeQueryCount: number;
   configuredFromEnv: boolean;
   modelId: string;
   syncIntervalSeconds: number | null;
@@ -34,6 +35,7 @@ export type RepoAgentConfig = {
   lastError: string | null;
   syncState: RepoSyncState;
   lastSyncReason: RepoSyncReason | null;
+  activeQueryCount: number;
 };
 
 export type AskInput = {
@@ -52,7 +54,13 @@ export type SyncResult = {
 export interface Env {
   AI: any;
   LOADER: WorkerLoader;
-  REPO_AGENT: DurableObjectNamespace<import("./repo-agent").RepoAgent>;
+  REPO_SYNC_AGENT: DurableObjectNamespace<
+    import("./repo-sync-agent").RepoSyncAgent
+  >;
+  REPO_QUERY_AGENT: DurableObjectNamespace<
+    import("./repo-query-agent").RepoQueryAgent
+  >;
+  REPO_DB: D1Database;
   REPO_FILES: R2Bucket;
   REPO_URL?: string;
   REPO_BRANCH?: string;
