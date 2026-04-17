@@ -1,6 +1,6 @@
-# Repo Docs Endpoint Worker
+# cull
 
-This project is a Cloudflare Worker that turns a GitHub repo into a docs/code Q&A endpoint.
+`cull` is a Cloudflare Worker that turns a GitHub repo into a docs/code Q&A endpoint.
 
 You point it at one repo with env vars, deploy it, and call:
 
