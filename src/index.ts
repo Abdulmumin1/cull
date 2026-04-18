@@ -1,6 +1,5 @@
 import { getAgentByName, routeAgentRequest } from "agents";
-import { Hono } from "hono";
-import { cors } from "hono/cors";
+import { Hono, type Context, type Next } from "hono";
 import type { AskInput, Env } from "./contracts";
 import { errorStatus, formatError, readJson } from "./repo-common";
 import { RepoAgent } from "./repo-agent";
@@ -10,13 +9,15 @@ import { RepoSyncAgent } from "./repo-sync-agent";
 export { RepoAgent, RepoSyncAgent, RepoQueryAgent };
 
 const DEFAULT_SYNC_AGENT_NAME = "default";
+const API_CORS_PATHS = [
+  "/health",
+  "/status",
+  "/sync",
+  "/query",
+  "/query/stream",
+] as const;
 
 const app = new Hono<{ Bindings: Env }>();
-const apiCors = cors({
-  origin: "*",
-  allowMethods: ["GET", "POST", "OPTIONS"],
-  allowHeaders: ["Content-Type"],
-});
 
 app.onError((error, c) => {
   return c.json(
@@ -27,11 +28,9 @@ app.onError((error, c) => {
   );
 });
 
-app.use("/health", apiCors);
-app.use("/status", apiCors);
-app.use("/sync", apiCors);
-app.use("/query", apiCors);
-app.use("/query/stream", apiCors);
+for (const path of API_CORS_PATHS) {
+  app.use(path, corsAllowlistMiddleware);
+}
 
 app.use("/agents/*", async (c, next) => {
   const routed = await routeAgentRequest(c.req.raw, c.env, { cors: true });
@@ -129,4 +128,101 @@ async function warmSyncAgent(env: Env): Promise<void> {
     const errorText = await response.text();
     throw new Error(`Repo agent warmup failed: ${errorText}`);
   }
+}
+
+async function corsAllowlistMiddleware(
+  c: Context<{ Bindings: Env }>,
+  next: Next,
+) {
+  const requestOrigin = c.req.header("origin");
+  const allowedOrigin = resolveAllowedOrigin(c.env, requestOrigin);
+
+  if (c.req.method === "OPTIONS") {
+    if (requestOrigin && !allowedOrigin) {
+      return new Response(
+        JSON.stringify({ error: "Origin is not allowed." }),
+        {
+          status: 403,
+          headers: {
+            "Content-Type": "application/json; charset=utf-8",
+          },
+        },
+      );
+    }
+
+    return new Response(null, {
+      status: 204,
+      headers: buildCorsHeaders(allowedOrigin),
+    });
+  }
+
+  if (requestOrigin && !allowedOrigin) {
+    return c.json({ error: "Origin is not allowed." }, 403);
+  }
+
+  await next();
+
+  for (const [key, value] of Object.entries(buildCorsHeaders(allowedOrigin))) {
+    c.res.headers.set(key, value);
+  }
+}
+
+function resolveAllowedOrigin(
+  env: Env,
+  requestOrigin: string | undefined,
+): string | null {
+  if (!requestOrigin) {
+    return null;
+  }
+
+  const allowedOrigins = getAllowedOrigins(env);
+
+  if (allowedOrigins.length === 0) {
+    return null;
+  }
+
+  if (allowedOrigins.includes("*")) {
+    return "*";
+  }
+
+  return allowedOrigins.includes(requestOrigin) ? requestOrigin : null;
+}
+
+function getAllowedOrigins(env: Env): string[] {
+  const raw =
+    env.ALLOWED_ORIGINS?.trim() ||
+    env.ALLOWED_ORIGIN?.trim() ||
+    "";
+
+  if (!raw) {
+    return [];
+  }
+
+  if (raw === "*") {
+    return ["*"];
+  }
+
+  return raw
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+}
+
+function buildCorsHeaders(allowedOrigin: string | null): Record<string, string> {
+  const headers: Record<string, string> = {
+    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    Vary: "Origin",
+  };
+
+  if (allowedOrigin === "*") {
+    headers["Access-Control-Allow-Origin"] = "*";
+    return headers;
+  }
+
+  if (allowedOrigin) {
+    headers["Access-Control-Allow-Origin"] = allowedOrigin;
+  }
+
+  return headers;
 }

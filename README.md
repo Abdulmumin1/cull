@@ -33,6 +33,7 @@ Then copy the returned D1 `database_id` into [wrangler.jsonc](/Users/macbookpro/
 ```text
 REPO_URL=https://github.com/your-org/your-repo
 REPO_BRANCH=main
+ALLOWED_ORIGINS=https://docs.example.com,http://localhost:3000
 QUERY_TIMEOUT_MS=120000
 MODEL_ID=@cf/moonshotai/kimi-k2.5
 REPO_SYNC_INTERVAL_SECONDS=3600
