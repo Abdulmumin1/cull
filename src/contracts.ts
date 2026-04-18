@@ -69,5 +69,6 @@ export interface Env {
   QUERY_TIMEOUT_MS?: string;
   MODEL_ID?: string;
   ALLOWED_ORIGIN?: string;
+  ALLOWED_ORIGINS?: string;
   REPO_TOKEN?: string;
 }

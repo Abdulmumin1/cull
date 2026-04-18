@@ -1,16 +1,16 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "docs-agent-cf",
+  "name": "cull",
   "main": "src/index.ts",
   "compatibility_date": "2026-04-15",
   "compatibility_flags": ["nodejs_compat", "experimental"],
   "vars": {
     "REPO_BRANCH": "main",
-    "REPO_SYNC_INTERVAL_SECONDS": "300",
+    "REPO_SYNC_INTERVAL_SECONDS": "3600",
     "REPO_SYNC_MAX_AGE_SECONDS": "3600",
     "QUERY_TIMEOUT_MS": "120000",
     "MODEL_ID": "@cf/zai-org/glm-4.7-flash",
-    "ALLOWED_ORIGIN": "*",
+    "ALLOWED_ORIGINS": "http://localhost:3000,http://localhost:3001,http://localhost:8788",
   },
   "triggers": {
     "crons": ["* * * * *"],
