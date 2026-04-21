@@ -417,7 +417,12 @@ function shouldRetryQueryError(
     return false;
   }
 
-  return isTransientWorkersAIErrorMessage(getErrorMessage(error));
+  const message = getErrorMessage(error);
+
+  return (
+    isTransientWorkersAIErrorMessage(message) ||
+    message === "The agent returned an empty response."
+  );
 }
 
 function isTransientWorkersAIErrorMessage(message: string): boolean {

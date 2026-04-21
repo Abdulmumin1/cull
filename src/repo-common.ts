@@ -69,21 +69,27 @@ export function buildSystemPrompt(): string {
     "You are a narrow repo question-answering agent running inside Cloudflare Think.",
     "Answer only by inspecting the current workspace through the execute tool.",
     "Search docs first. Only search code if docs do not clearly answer the question.",
+    "Be fast and conservative: stop as soon as you have enough evidence to answer well.",
     "",
     "Docs-first policy:",
     "- search README* first",
     "- then docs/**",
     "- then *.md, *.mdx, and *.rst",
     "- use state.glob(), state.searchFiles(), and state.readFile()",
+    "- prefer the smallest useful set of doc files",
+    "- if one or two doc files clearly answer the question, stop immediately",
     "- if docs are sufficient, stop without searching code",
+    "- do not keep digging for extra confirmation once the answer is clear",
     "",
     "Code fallback policy:",
+    "- only search code when the docs are missing, ambiguous, or clearly incomplete",
     "- search source files, config files, exported APIs, and type definitions",
     "- use state.glob(), state.searchFiles(), and state.readFile()",
     "",
     "Answering rules:",
     "- treat the workspace as read-only during answers",
     "- prefer concise evidence from the smallest useful set of files",
+    "- do not exhaustively inspect the repo",
     `- return only this exact shape: ${REPO_RESPONSE_SHAPE}`,
     "- do not wrap the response in markdown fences",
     "- keep <answer> plain text only",
@@ -244,7 +250,7 @@ export function normalizeRepoAnswer(rawText: string): RepoAnswer {
     !Array.isArray(parsed.sources)
   ) {
     return {
-      answer: rawText || "The agent returned an empty response.",
+      answer: rawText,
       sources: [],
     };
   }
@@ -402,7 +408,7 @@ function parseTaggedRepoAnswer(rawText: string): RepoAnswer | null {
   }
 
   return {
-    answer: answer || "The agent returned an empty response.",
+    answer,
     sources,
   };
 }

@@ -171,7 +171,6 @@ pre {
   border-radius: 1rem;
   font-size: 0.95rem;
   line-height: 1.5;
-  white-space: pre-wrap;
   word-wrap: break-word;
 }
 
@@ -190,6 +189,64 @@ pre {
 .loading-bubble {
   color: var(--text-muted);
   font-style: italic;
+}
+
+.message-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.message-content code {
+  font-size: 0.92em;
+}
+
+.message-paragraph {
+  margin: 0;
+}
+
+.message-list {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.message-list.ordered {
+  list-style: decimal;
+}
+
+.message-code-block {
+  overflow: hidden;
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  border-radius: 0.9rem;
+  background: #f8fafc;
+}
+
+.message-code-language {
+  padding: 0.45rem 0.75rem;
+  border-bottom: 1px solid rgba(17, 24, 39, 0.08);
+  background: #eef2ff;
+  color: #334155;
+  font-family: "IBM Plex Mono", "SFMono-Regular", monospace;
+  font-size: 0.78rem;
+  text-transform: lowercase;
+}
+
+.message-code-block pre {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.message-code-block code,
+.message-content :not(pre) > code {
+  font-family: "IBM Plex Mono", "SFMono-Regular", monospace;
+}
+
+.message-content :not(pre) > code {
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.35rem;
+  background: rgba(37, 99, 235, 0.08);
 }
 
 .message-sources {
