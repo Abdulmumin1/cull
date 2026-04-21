@@ -162,7 +162,10 @@ async function corsAllowlistMiddleware(
 
   await next();
 
-  for (const [key, value] of Object.entries(buildCorsHeaders(allowedOrigin))) {
+  const corsHeaders = buildCorsHeaders(allowedOrigin);
+  c.res = new Response(c.res.body, c.res);
+
+  for (const [key, value] of Object.entries(corsHeaders)) {
     c.res.headers.set(key, value);
   }
 }
