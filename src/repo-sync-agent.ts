@@ -337,6 +337,7 @@ export class RepoSyncAgent extends Agent<Env, RepoAgentConfig> {
   private buildStatus(): RepoStatus {
     const config = this.getRepoConfig();
     const settings = getEnvSettings(this.env);
+    const hasSnapshot = hasRepoSnapshot(config);
 
     return {
       repoUrl: settings.repoUrl ?? config.repoUrl,
@@ -344,7 +345,7 @@ export class RepoSyncAgent extends Agent<Env, RepoAgentConfig> {
       lastCommit: config.lastCommit,
       lastSyncedAt: config.lastSyncedAt,
       lastError: config.lastError,
-      ready: isRepoReady(config) && !this.syncPromise,
+      ready: hasSnapshot && (config.syncState === "ready" || Boolean(this.syncPromise)),
       syncState: this.syncPromise ? "syncing" : config.syncState,
       lastSyncReason: config.lastSyncReason,
       activeQueryCount: config.activeQueryCount,
@@ -370,6 +371,10 @@ function buildSyncResult(config: RepoAgentConfig): SyncResult {
     lastCommit: config.lastCommit,
     lastSyncedAt: config.lastSyncedAt,
   };
+}
+
+function hasRepoSnapshot(config: RepoAgentConfig): boolean {
+  return Boolean(config.repoUrl && config.lastSyncedAt);
 }
 
 function isRepoReady(config: RepoAgentConfig): boolean {
