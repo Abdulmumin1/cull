@@ -3,14 +3,15 @@
   "name": "cull",
   "main": "src/index.ts",
   "compatibility_date": "2026-04-15",
-  "compatibility_flags": ["nodejs_compat", "experimental"],
+  "compatibility_flags": ["nodejs_compat"],
   "vars": {
     "REPO_BRANCH": "main",
+    "REPO_URL": "https://github.com/Abdulmumin1/owostack",
     "REPO_SYNC_INTERVAL_SECONDS": "3600",
     "REPO_SYNC_MAX_AGE_SECONDS": "3600",
     "QUERY_TIMEOUT_MS": "120000",
-    "MODEL_ID": "@cf/zai-org/glm-4.7-flash",
-    "ALLOWED_ORIGINS": "http://localhost:3000,http://localhost:3001,http://localhost:8788",
+    "MODEL_ID": "@cf/moonshotai/kimi-k2.5",
+    "ALLOWED_ORIGINS": "http://localhost:3000,https://docs.owostack.com,http://localhost:8788",
   },
   "triggers": {
     "crons": ["* * * * *"],
@@ -22,14 +23,14 @@
   "r2_buckets": [
     {
       "binding": "REPO_FILES",
-      "bucket_name": "docs-agent-cf-repo-files",
+      "bucket_name": "cull-owostack-repo-files",
     },
   ],
   "d1_databases": [
     {
       "binding": "REPO_DB",
-      "database_name": "docs-agent-cf-repo-db",
-      "database_id": "docs-agent-cf-repo-db",
+      "database_name": "cull-owostack-repo-db",
+      "database_id": "9a0d15ff-a7fd-4b57-a4f7-1d643cf020d0",
     },
   ],
   "worker_loaders": [
@@ -48,6 +49,13 @@
         "name": "REPO_QUERY_AGENT",
       },
     ],
+  },
+
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "invocation_logs": true,
+    },
   },
   "migrations": [
     {

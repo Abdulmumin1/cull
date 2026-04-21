@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Fragment, type ReactNode, useEffect, useRef, useState } from "react";
 import { Button, Text, Loader } from "@cloudflare/kumo";
 import {
   ArrowsClockwise,
@@ -287,7 +287,7 @@ export function RepoWorkbench({ apiBaseUrl }: { apiBaseUrl: string }) {
                           <Loader size="sm" /> Thinking...
                         </span>
                       ) : (
-                        message.content
+                        renderMessageContent(message.content)
                       )}
                     </div>
                     {message.sources && message.sources.length > 0 && (
@@ -707,6 +707,130 @@ function formatSyncInterval(value?: number | null) {
   }
 
   return `${value}s`;
+}
+
+function renderMessageContent(content: string): ReactNode {
+  const blocks = parseMarkdownBlocks(content);
+
+  return blocks.map((block, index) => {
+    if (block.type === "code") {
+      return (
+        <div key={`code-${index}`} className="message-code-block">
+          {block.language ? (
+            <div className="message-code-language">{block.language}</div>
+          ) : null}
+          <pre>
+            <code>{block.content}</code>
+          </pre>
+        </div>
+      );
+    }
+
+    return renderTextBlock(block.content, index);
+  });
+}
+
+function renderTextBlock(content: string, index: number): ReactNode {
+  const trimmed = content.trim();
+
+  if (!trimmed) {
+    return null;
+  }
+
+  const lines = trimmed.split("\n");
+
+  if (lines.every((line) => /^[-*]\s+/.test(line))) {
+    return (
+      <ul key={`ul-${index}`} className="message-list">
+        {lines.map((line, lineIndex) => (
+          <li key={`ul-${index}-${lineIndex}`}>
+            {renderInlineMarkdown(line.replace(/^[-*]\s+/, ""))}
+          </li>
+        ))}
+      </ul>
+    );
+  }
+
+  if (lines.every((line) => /^\d+\.\s+/.test(line))) {
+    return (
+      <ol key={`ol-${index}`} className="message-list ordered">
+        {lines.map((line, lineIndex) => (
+          <li key={`ol-${index}-${lineIndex}`}>
+            {renderInlineMarkdown(line.replace(/^\d+\.\s+/, ""))}
+          </li>
+        ))}
+      </ol>
+    );
+  }
+
+  return (
+    <p key={`p-${index}`} className="message-paragraph">
+      {lines.map((line, lineIndex) => (
+        <Fragment key={`line-${index}-${lineIndex}`}>
+          {lineIndex > 0 ? <br /> : null}
+          {renderInlineMarkdown(line)}
+        </Fragment>
+      ))}
+    </p>
+  );
+}
+
+function renderInlineMarkdown(content: string): ReactNode[] {
+  return content.split(/(`[^`]+`)/g).filter(Boolean).map((part, index) => {
+    if (part.startsWith("`") && part.endsWith("`")) {
+      return <code key={`inline-${index}`}>{part.slice(1, -1)}</code>;
+    }
+
+    return <Fragment key={`text-${index}`}>{part}</Fragment>;
+  });
+}
+
+function parseMarkdownBlocks(content: string) {
+  const blocks: Array<
+    | { type: "text"; content: string }
+    | { type: "code"; content: string; language: string | null }
+  > = [];
+  const pattern = /```([\w-]+)?\n([\s\S]*?)```/g;
+  let lastIndex = 0;
+
+  for (const match of content.matchAll(pattern)) {
+    const start = match.index ?? 0;
+    const [raw, language, code] = match;
+
+    if (start > lastIndex) {
+      const text = content.slice(lastIndex, start);
+      blocks.push(
+        ...text
+          .split(/\n{2,}/)
+          .filter(Boolean)
+          .map((value) => ({ type: "text" as const, content: value })),
+      );
+    }
+
+    blocks.push({
+      type: "code",
+      content: code.replace(/\n$/, ""),
+      language: language ?? null,
+    });
+
+    lastIndex = start + raw.length;
+  }
+
+  if (lastIndex < content.length) {
+    const text = content.slice(lastIndex);
+    blocks.push(
+      ...text
+        .split(/\n{2,}/)
+        .filter(Boolean)
+        .map((value) => ({ type: "text" as const, content: value })),
+    );
+  }
+
+  if (blocks.length === 0) {
+    return [{ type: "text" as const, content }];
+  }
+
+  return blocks;
 }
 
 function readStreamError(payload: unknown) {

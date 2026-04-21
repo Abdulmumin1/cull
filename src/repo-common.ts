@@ -250,7 +250,7 @@ export function normalizeRepoAnswer(rawText: string): RepoAnswer {
     !Array.isArray(parsed.sources)
   ) {
     return {
-      answer: rawText || "The agent returned an empty response.",
+      answer: rawText,
       sources: [],
     };
   }
@@ -408,7 +408,7 @@ function parseTaggedRepoAnswer(rawText: string): RepoAnswer | null {
   }
 
   return {
-    answer: answer || "The agent returned an empty response.",
+    answer,
     sources,
   };
 }
